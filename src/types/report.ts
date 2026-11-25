@@ -29,6 +29,7 @@ export interface ReportFormData {
   narasi: string;
   penutup: string;
   akhiran: string;
+  tembusan: string;
   gunakanBoldWa: boolean;
   gunakanIkonWa: boolean;
   stempelKopFoto: boolean;
@@ -83,6 +84,12 @@ export const PENUTUP_PRESETS = [
   'Situasi wilayah terpantau aman, lancar, dan kondusif.',
   'Kegiatan selesai dengan tertib, situasi aman terkendali.',
 ];
+
+export const DEFAULT_TEMBUSAN = [
+  '1. Wakapolrestabes Smg.',
+  '2. Kabag Ops Polrestabes Smg.',
+  '3. Kasat Binmas Polrestabes Smg.',
+].join('\n');
 
 export const ACTIVITY_TEMPLATES: ActivityTemplate[] = [
   {

@@ -17,6 +17,7 @@ import { HistoryView } from './components/HistoryView';
 import {
   ACTIVITY_TEMPLATES,
   ActivityTemplate,
+  DEFAULT_TEMBUSAN,
   ReportFormData,
   ReportImage,
   SavedReport,
@@ -68,8 +69,9 @@ function createInitialFormData(): ReportFormData {
     }),
     penutup: 'Giat berjalan dengan aman dan tertib.',
     akhiran: 'Dump',
+    tembusan: savedProfile.tembusan ?? DEFAULT_TEMBUSAN,
     gunakanBoldWa: true,
-    gunakanIkonWa: true,
+    gunakanIkonWa: false,
     stempelKopFoto: true,
     nomorTujuanWa: savedProfile.nomorTujuanWa ?? '',
     namaGrupPreview: savedProfile.kesatuanPelaksana ?? 'POLSEK SEMARANG SELATAN',
@@ -250,6 +252,7 @@ export default function App() {
         provinsi: formData.provinsi,
         jabatanPelaksana: formData.jabatanPelaksana,
         namaPelaksana: formData.namaPelaksana,
+        tembusan: formData.tembusan,
         nomorTujuanWa: formData.nomorTujuanWa,
       };
       localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(profileToSave));
@@ -284,7 +287,8 @@ export default function App() {
       ...report.data,
       namaJalan: report.data.namaJalan ?? '',
       provinsi: report.data.provinsi ?? 'Jawa Tengah',
-      gunakanIkonWa: report.data.gunakanIkonWa ?? true,
+      tembusan: report.data.tembusan ?? '',
+      gunakanIkonWa: report.data.gunakanIkonWa ?? false,
       stempelKopFoto: report.data.stempelKopFoto ?? true,
     });
     setActiveTab('form');

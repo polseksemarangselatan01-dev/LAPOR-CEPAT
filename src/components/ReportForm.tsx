@@ -13,6 +13,7 @@ import {
   ImagePlus,
   Landmark,
   LayoutGrid,
+  ListOrdered,
   Map as MapIcon,
   MapPin,
   Plus,
@@ -32,6 +33,7 @@ import {
 import {
   ACTIVITY_TEMPLATES,
   ActivityTemplate,
+  DEFAULT_TEMBUSAN,
   KELURAHAN_SEMARANG_SELATAN,
   PENUTUP_PRESETS,
   PERIHAL_PRESETS,
@@ -751,6 +753,47 @@ export const ReportForm: React.FC<ReportFormProps> = ({
                 className={inputPlainClass}
               />
             </div>
+          </div>
+
+          <div>
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-1.5">
+              <label htmlFor="tembusan" className="text-xs font-semibold text-slate-700 inline-flex items-center gap-1.5">
+                <ListOrdered className="h-3.5 w-3.5 text-indigo-600" />
+                Tembusan (Opsional)
+              </label>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => onChange('tembusan', DEFAULT_TEMBUSAN)}
+                  className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+                >
+                  Isi Default
+                </button>
+                {data.tembusan.trim() && (
+                  <button
+                    type="button"
+                    onClick={() => onChange('tembusan', '')}
+                    className="rounded-lg border border-rose-200 bg-rose-50/70 px-2.5 py-1 text-[11px] font-semibold text-rose-700 hover:bg-rose-100 transition-colors cursor-pointer"
+                  >
+                    Kosongkan
+                  </button>
+                )}
+              </div>
+            </div>
+            <div className="relative">
+              <ListOrdered className="pointer-events-none absolute left-3.5 top-3 h-4 w-4 text-indigo-600" />
+              <textarea
+                id="tembusan"
+                rows={3}
+                value={data.tembusan}
+                onChange={(e) => onChange('tembusan', e.target.value)}
+                placeholder={'1. Wakapolrestabes Smg.\n2. Kabag Ops Polrestabes Smg.\n3. Kasat Binmas Polrestabes Smg.'}
+                className={`${inputIconClass} leading-relaxed resize-y`}
+              />
+            </div>
+            <p className="mt-1.5 text-[11px] text-slate-500">
+              Tulis satu penerima per baris (penomoran otomatis ditambahkan jika belum diberi angka). Kosongkan jika laporan tanpa tembusan.
+            </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2.5 pt-2">

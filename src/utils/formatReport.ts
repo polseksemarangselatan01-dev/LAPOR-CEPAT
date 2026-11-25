@@ -151,6 +151,20 @@ export function formatWhatsAppMessage(data: ReportFormData): string {
     lines.push(ic('🔰', b(data.akhiran)));
   }
 
+  const tembusanLines = (data.tembusan || '')
+    .split('\n')
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+  if (tembusanLines.length > 0) {
+    lines.push('');
+    lines.push(ic('📑', b('Tembusan :')));
+    tembusanLines.forEach((item, idx) => {
+      const hasNumberPrefix = /^\d+[.)]\s*/.test(item);
+      lines.push(hasNumberPrefix ? item : `${idx + 1}. ${item}`);
+    });
+  }
+
   return lines.join('\n');
 }
 
