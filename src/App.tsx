@@ -14,6 +14,7 @@ import {
 import { ReportForm } from './components/ReportForm';
 import { WhatsAppPreview } from './components/WhatsAppPreview';
 import { HistoryView } from './components/HistoryView';
+import { PhotoCropModal } from './components/PhotoCropModal';
 import {
   ACTIVITY_TEMPLATES,
   ActivityTemplate,
@@ -81,12 +82,24 @@ function createInitialFormData(): ReportFormData {
 type ActiveTab = 'form' | 'history' | 'guide';
 type MobilePane = 'edit' | 'preview';
 
+interface CropTask {
+  file: File;
+  originalFile: File;
+  targetSlotIndex: number;
+}
+
+interface CropQueueState {
+  tasks: CropTask[];
+  totalCount: number;
+}
+
 export default function App() {
   const [formData, setFormData] = useState<ReportFormData>(createInitialFormData);
   const [photoSlots, setPhotoSlots] = useState<(ReportImage | null)[]>([
     null,
     null,
   ]);
+  const [cropQueue, setCropQueue] = useState<CropQueueState | null>(null);
   const [activeTab, setActiveTab] = useState<ActiveTab>('form');
   const [mobilePane, setMobilePane] = useState<MobilePane>('edit');
   const [profileSaved, setProfileSaved] = useState(false);
@@ -153,6 +166,28 @@ export default function App() {
     showToast(`Template "${template.label}" diterapkan.`, 'success');
   };
 
+  const commitImageToSlot = (slotIndex: number, file: File, originalFile: File) => {
+    setPhotoSlots((prev) => {
+      const next = [...prev];
+      while (next.length <= slotIndex && next.length < 6) {
+        next.push(null);
+      }
+      if (slotIndex >= next.length) return prev;
+      if (next[slotIndex]) {
+        URL.revokeObjectURL(next[slotIndex]!.previewUrl);
+      }
+      next[slotIndex] = {
+        id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        file,
+        originalFile,
+        previewUrl: URL.createObjectURL(file),
+        name: file.name,
+        sizeBytes: file.size,
+      };
+      return next;
+    });
+  };
+
   const handleSetSlotImages = (slotIndex: number, fileList: FileList | File[]) => {
     const incoming = Array.from(fileList).filter((f) => f.type.startsWith('image/'));
     if (incoming.length === 0) {
@@ -161,41 +196,94 @@ export default function App() {
     }
 
     const MAX_PHOTOS = 6;
+    const simulatedOccupied = photoSlots.map((slot, idx) => idx === slotIndex || slot !== null);
+    const tasks: CropTask[] = [
+      {
+        file: incoming[0],
+        originalFile: incoming[0],
+        targetSlotIndex: slotIndex,
+      },
+    ];
 
-    setPhotoSlots((prev) => {
-      const next = [...prev];
-      const createEntry = (file: File): ReportImage => ({
-        id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-        file,
-        previewUrl: URL.createObjectURL(file),
-        name: file.name,
-        sizeBytes: file.size,
-      });
-
-      if (next[slotIndex]) {
-        URL.revokeObjectURL(next[slotIndex]!.previewUrl);
-      }
-      next[slotIndex] = createEntry(incoming[0]);
-
-      // Distribute additional selected photos into empty slots or append new slots up to MAX_PHOTOS
-      let fileIdx = 1;
-      for (let i = 0; i < next.length && fileIdx < incoming.length; i++) {
-        if (i !== slotIndex && !next[i]) {
-          next[i] = createEntry(incoming[fileIdx]);
-          fileIdx++;
-        }
-      }
-      while (fileIdx < incoming.length && next.length < MAX_PHOTOS) {
-        next.push(createEntry(incoming[fileIdx]));
+    let fileIdx = 1;
+    for (let i = 0; i < simulatedOccupied.length && fileIdx < incoming.length; i++) {
+      if (i !== slotIndex && !simulatedOccupied[i]) {
+        simulatedOccupied[i] = true;
+        tasks.push({
+          file: incoming[fileIdx],
+          originalFile: incoming[fileIdx],
+          targetSlotIndex: i,
+        });
         fileIdx++;
       }
+    }
+    while (fileIdx < incoming.length && simulatedOccupied.length < MAX_PHOTOS) {
+      const newSlotIdx = simulatedOccupied.length;
+      simulatedOccupied.push(true);
+      tasks.push({
+        file: incoming[fileIdx],
+        originalFile: incoming[fileIdx],
+        targetSlotIndex: newSlotIdx,
+      });
+      fileIdx++;
+    }
 
-      if (fileIdx < incoming.length) {
-        showToast(`Maksimal ${MAX_PHOTOS} foto dokumentasi per laporan.`, 'info');
-      }
+    if (fileIdx < incoming.length) {
+      showToast(`Maksimal ${MAX_PHOTOS} foto dokumentasi per laporan.`, 'info');
+    }
 
-      return next;
+    setCropQueue({
+      tasks,
+      totalCount: tasks.length,
     });
+  };
+
+  const handleCropSlotImage = (slotIndex: number) => {
+    const existing = photoSlots[slotIndex];
+    if (!existing) return;
+    const sourceFile = existing.originalFile ?? existing.file;
+    setCropQueue({
+      tasks: [
+        {
+          file: sourceFile,
+          originalFile: sourceFile,
+          targetSlotIndex: slotIndex,
+        },
+      ],
+      totalCount: 1,
+    });
+  };
+
+  const advanceCropQueue = () => {
+    setCropQueue((prev) => {
+      if (!prev || prev.tasks.length <= 1) return null;
+      return {
+        ...prev,
+        tasks: prev.tasks.slice(1),
+      };
+    });
+  };
+
+  const handleCropConfirm = (croppedFile: File) => {
+    if (!cropQueue || cropQueue.tasks.length === 0) return;
+    const current = cropQueue.tasks[0];
+    commitImageToSlot(current.targetSlotIndex, croppedFile, current.originalFile);
+    advanceCropQueue();
+  };
+
+  const handleCropUseOriginal = () => {
+    if (!cropQueue || cropQueue.tasks.length === 0) return;
+    const current = cropQueue.tasks[0];
+    commitImageToSlot(
+      current.targetSlotIndex,
+      current.originalFile,
+      current.originalFile
+    );
+    advanceCropQueue();
+  };
+
+  const handleCropCancel = () => {
+    setCropQueue(null);
   };
 
   const handleAddPhotoSlot = () => {
@@ -526,6 +614,7 @@ export default function App() {
                   onChange={handleFieldChange}
                   onApplyTemplate={handleApplyTemplate}
                   onSetSlotImages={handleSetSlotImages}
+                  onCropSlotImage={handleCropSlotImage}
                   onAddPhotoSlot={handleAddPhotoSlot}
                   onRemoveSlotImage={handleRemoveSlotImage}
                   onReplaceWithCollage={handleReplaceWithCollage}
@@ -653,6 +742,18 @@ export default function App() {
             </button>
           </div>
         </div>
+      )}
+
+      {/* Photo Crop Modal opened after selecting photo(s) or clicking Crop */}
+      {cropQueue && cropQueue.tasks.length > 0 && (
+        <PhotoCropModal
+          file={cropQueue.tasks[0].file}
+          queueIndex={cropQueue.totalCount - cropQueue.tasks.length}
+          queueTotal={cropQueue.totalCount}
+          onConfirm={handleCropConfirm}
+          onUseOriginal={handleCropUseOriginal}
+          onCancel={handleCropCancel}
+        />
       )}
     </div>
   );

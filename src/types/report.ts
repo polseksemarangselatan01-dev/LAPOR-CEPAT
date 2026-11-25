@@ -3,6 +3,7 @@ export const TRIBRATA_LOGO_PATH = `${import.meta.env.BASE_URL}assets/aistudio/Lo
 export interface ReportImage {
   id: string;
   file: File;
+  originalFile?: File;
   previewUrl: string;
   name: string;
   sizeBytes: number;

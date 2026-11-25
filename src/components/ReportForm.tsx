@@ -9,6 +9,7 @@ import {
   Check,
   Clock,
   Clock3,
+  Crop,
   FileText,
   ImagePlus,
   Landmark,
@@ -54,6 +55,7 @@ interface ReportFormProps {
   onChange: <K extends keyof ReportFormData>(key: K, value: ReportFormData[K]) => void;
   onApplyTemplate: (template: ActivityTemplate) => void;
   onSetSlotImages: (slotIndex: number, files: FileList | File[]) => void;
+  onCropSlotImage: (slotIndex: number) => void;
   onAddPhotoSlot: () => void;
   onRemoveSlotImage: (slotIndex: number) => void;
   onReplaceWithCollage: (collageFile: File) => void;
@@ -66,6 +68,7 @@ interface PhotoSlotCardProps {
   title: string;
   image: ReportImage | null;
   onSetFiles: (slotIndex: number, files: FileList | File[]) => void;
+  onCrop: (slotIndex: number) => void;
   onRemove: (slotIndex: number) => void;
 }
 
@@ -74,6 +77,7 @@ const PhotoSlotCard: React.FC<PhotoSlotCardProps> = ({
   title,
   image,
   onSetFiles,
+  onCrop,
   onRemove,
 }) => {
   const galleryRef = useRef<HTMLInputElement>(null);
@@ -159,8 +163,16 @@ const PhotoSlotCard: React.FC<PhotoSlotCardProps> = ({
           <div className="flex items-center gap-2">
             <button
               type="button"
+              onClick={() => onCrop(slotIndex)}
+              className="min-h-[40px] flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50/70 px-2.5 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 transition-colors whitespace-nowrap cursor-pointer"
+            >
+              <Crop className="h-3.5 w-3.5" />
+              <span>Crop</span>
+            </button>
+            <button
+              type="button"
               onClick={() => galleryRef.current?.click()}
-              className="min-h-[40px] flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+              className="min-h-[40px] flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-2.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition-colors whitespace-nowrap cursor-pointer"
             >
               <RefreshCw className="h-3.5 w-3.5 text-slate-500" />
               <span>Ganti</span>
@@ -169,7 +181,7 @@ const PhotoSlotCard: React.FC<PhotoSlotCardProps> = ({
               type="button"
               onClick={() => onRemove(slotIndex)}
               aria-label={`Hapus ${title}`}
-              className="min-h-[40px] inline-flex items-center justify-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50/70 px-3 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-100 transition-colors cursor-pointer"
+              className="min-h-[40px] inline-flex items-center justify-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50/70 px-2.5 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-100 transition-colors whitespace-nowrap cursor-pointer"
             >
               <Trash2 className="h-3.5 w-3.5" />
               <span>Hapus</span>
@@ -216,6 +228,7 @@ export const ReportForm: React.FC<ReportFormProps> = ({
   onChange,
   onApplyTemplate,
   onSetSlotImages,
+  onCropSlotImage,
   onAddPhotoSlot,
   onRemoveSlotImage,
   onReplaceWithCollage,
@@ -875,6 +888,7 @@ export const ReportForm: React.FC<ReportFormProps> = ({
               title={`Foto Dokumentasi ${idx + 1}`}
               image={slotImg}
               onSetFiles={onSetSlotImages}
+              onCrop={onCropSlotImage}
               onRemove={onRemoveSlotImage}
             />
           ))}
